@@ -1,0 +1,145 @@
+*Nos ayuda a obtener información de la libreria y la base de datos donde genera un informe general*;
+proc contents data=Pokemon;
+run;
+
+proc contents data=type;
+run;
+
+*El comando SET es para llamar nuestra data 
+ El comando WHERE es un condicional, en este caso le pedimos que nos muestre los datos que cumplan *;
+data clasificación;
+	set Work.pokemon;
+	where Legendary="TRUE";
+run;
+ 
+ 
+data especie;
+	set Work.type;
+	where Types="Dark";
+run;
+
+
+*Para poder borrar una columna usamos el comando DROP, para esto igualamos drop= el nombre de la colummna *;
+
+Data Prueba_a(drop= HP Defense Attack Speed);
+	set Work.pokemon;	
+run;
+
+
+*Para Cambiar el nombre de las variables ya existentes usamos el comando RENAME el cual tenemos que igualar el nombre original
+con el que queremos que aparezca*;
+
+Data Prueba_b; 
+	set Work.pokemon;
+	rename '#'n=ID_Pok;
+	rename 'Sp. Atk'n= Special_Attack;
+	rename 'Sp. Def'n= Special_Defense;
+	rename	'Type 1'n=ID_Especie;
+run;
+
+Data Prueba_1;
+	set Work.type;
+	rename '#'n=ID_Especie;
+	rename Types=Especie;
+run;
+
+
+*Generamos una nueva tabla y pedimos borrar columnas y al mismo tiempo cambiamos nombre a un variable
+ Mezclamos comandos*;
+
+Data Prueba_3(drop= HP Defense Attack Speed Special_Attack Special_Defense'Sp. Atk'n'Sp. Def'n); 
+	set Work.prueba_b;
+	rename 'Type 1'n=Especie;
+run;
+
+*Pedimos que nos muestre el contenido de nuestras nuevas datas set  *;
+proc contents data=Prueba_1;
+run;
+
+proc contents data=prueba_3;
+run;
+
+*Pedimos que nos imprima nuestras dataset creadas con la función PRINT*; 
+proc print data=prueba_3;
+run;
+
+proc print data=Prueba_1;
+run;
+
+
+** KEEP permite guardar en el dataset creado sólo las variables allí mencionadas;
+data Prueba_3;
+set Work.prueba_3;
+keep Name Especie Generation;
+run;
+
+data Prueba_d;
+set Work.prueba_1;
+keep Especie;
+run;
+
+
+
+
+
+
+*Parte 2*;
+
+proc contents data=Work.pokemon;
+run;
+
+data lag_table_pokemon;
+	set Work.pokemon;
+	format Legendary $6.;
+run;
+
+proc contents data=lag_table_pokemon;
+run;
+
+data lag_table_pokemon;
+ 	set lag_table_pokemon;
+ 	lag_Name=lag3(Name);
+run;
+
+proc sort data=Prueba_b;
+by ID_Especie;
+
+proc sort data=Prueba_1;
+by ID_Especie;
+
+
+data Pokemon_por_tipo;
+	merge Prueba_b(IN=a)Prueba_1(IN=b);
+	by ID_Especie;
+run;
+
+data Tipo_por_daño;
+	merge Prueba_b(IN=a)Prueba_1(IN=b);
+	by ID_Especie;
+	if Normal or Fire;
+run;
+
+data sells_by_item_3;
+	merge Prueba_b(IN=a)Prueba_1(IN=b);
+	by ID_Especie;
+	if Normal and Fire;
+run;
+
+
+***using SQL***;
+
+
+***************Combine columns from differents table ***********;
+
+proc sql;
+	create table Query1 as
+	select ID_Pok, Name
+	from Prueba_b;
+quit;
+
+proc sql;
+	create table Query2 as
+	select ID_Pok, Name
+	from Prueba_b
+	where name like '%Vulpix%';
+quit;
